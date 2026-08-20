@@ -1,0 +1,140 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100%;
+  font-family: Arial, sans-serif;
+}
+
+.login-page {
+  width: 100%;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f7fb;
+  padding: 20px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 430px;
+  background: #ffffff;
+  padding: 32px 24px;
+  border-radius: 20px;
+}
+
+.login-card h1 {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.2;
+  color: #111827;
+}
+
+.login-card p {
+  margin: 8px 0 30px;
+  font-size: 15px;
+  color: #6b7280;
+}
+
+.login-card label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.phone-input {
+  width: 100%;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+  margin-bottom: 18px;
+}
+
+.phone-input span {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  background: #f9fafb;
+  border-right: 1px solid #d1d5db;
+  color: #374151;
+  font-size: 15px;
+}
+
+.phone-input input {
+  width: 100%;
+  height: 100%;
+  border: none;
+  outline: none;
+  padding: 0 14px;
+  font-size: 16px;
+  color: #111827;
+}
+
+.phone-input input::placeholder {
+  color: #9ca3af;
+}
+
+.login-card button {
+  width: 100%;
+  height: 52px;
+  border: none;
+  border-radius: 10px;
+  background: #111827;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.login-card button:active {
+  transform: scale(0.98);
+}
+
+.otp-input {
+  width: 100%;
+  height: 52px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  outline: none;
+  padding: 0 14px;
+  margin-bottom: 18px;
+  font-size: 18px;
+  letter-spacing: 4px;
+  text-align: center;
+}
+
+.back-button {
+  margin-top: 10px;
+  background: transparent !important;
+  color: #6b7280 !important;
+}
+
+
+@media (max-width: 360px) {
+  .login-page {
+    padding: 16px;
+  }
+
+  .login-card {
+    padding: 26px 18px;
+    border-radius: 16px;
+  }
+
+  .login-card h1 {
+    font-size: 25px;
+  }
+}

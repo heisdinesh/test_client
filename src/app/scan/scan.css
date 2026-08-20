@@ -1,0 +1,38 @@
+.scan-page {
+  min-height: 100dvh;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f5f7fb;
+}
+
+.scan-card {
+  width: 100%;
+  max-width: 430px;
+  background: white;
+  padding: 24px;
+  border-radius: 20px;
+}
+
+.scan-card h1 {
+  margin: 0;
+  font-size: 26px;
+}
+
+.scan-card p {
+  color: #666;
+}
+
+#qr-reader {
+  width: 100%;
+  margin-top: 20px;
+}
+
+.result {
+  margin-top: 20px;
+  padding: 15px;
+  background: #f3f4f6;
+  border-radius: 10px;
+  word-break: break-word;
+}
