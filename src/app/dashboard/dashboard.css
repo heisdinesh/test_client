@@ -113,6 +113,21 @@
   background: #f9fafb;
 }
 
+.crate-box.priority-can-wait {
+  border-color: #86efac;
+  background: #f0fdf4;
+}
+
+.crate-box.priority-soon {
+  border-color: #fdba74;
+  background: #fff7ed;
+}
+
+.crate-box.priority-immediate {
+  border-color: #fca5a5;
+  background: #fef2f2;
+}
+
 .crate-box strong {
   display: block;
   font-size: 14px;
@@ -159,6 +174,21 @@
   color: #166534;
   font-size: 12px;
   font-weight: 700;
+}
+
+.priority-soon .priority-pill {
+  background: #ffedd5;
+  color: #9a3412;
+}
+
+.priority-immediate .priority-pill {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.priority-unknown .priority-pill {
+  background: #e5e7eb;
+  color: #374151;
 }
 
 .empty-state {

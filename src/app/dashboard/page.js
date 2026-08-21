@@ -15,12 +15,31 @@ function formatValue(value, suffix = "") {
   return `${value}${suffix}`;
 }
 
+function priorityClass(priority) {
+  const normalized = String(priority || "").toLowerCase().replace(/[_-]+/g, " ");
+
+  if (normalized.includes("can wait") || normalized.includes("wait")) {
+    return "priority-can-wait";
+  }
+
+  if (normalized.includes("immediate") || normalized.includes("red")) {
+    return "priority-immediate";
+  }
+
+  if (normalized.includes("soon") || normalized.includes("orange")) {
+    return "priority-soon";
+  }
+
+  return "priority-unknown";
+}
+
 function CrateBox({ scan }) {
   const priority = scan.qrCode?.priority || scan.priority;
   const shelfScore = scan.qrCode?.ShelfScore ?? scan.ShelfScore;
+  const crateClassName = `crate-box ${priorityClass(priority)}`;
 
   return (
-    <article className="crate-box">
+    <article className={crateClassName}>
       <div>
         <strong>{scan.qrCodeId}</strong>
         <p>{scan.room?.name || scan.roomId || "Unassigned"}</p>
@@ -43,7 +62,7 @@ function CrateBox({ scan }) {
 
       {(priority || shelfScore !== null) && (
         <div className="crate-meta">
-          {priority && <span>{priority}</span>}
+          {priority && <span className="priority-pill">{priority}</span>}
           {shelfScore !== null && shelfScore !== undefined && <span>Score {shelfScore}</span>}
         </div>
       )}
