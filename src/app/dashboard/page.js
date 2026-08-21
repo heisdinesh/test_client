@@ -7,6 +7,43 @@ const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ||
   "https://5000-kode-ws-f9fbf17f0.hebbale.academy";
 
+const LABELS = {
+  en: {
+    title: "Crate Rooms",
+    updated: "Updated",
+    warehouse: "Warehouse",
+    farm: "Farm",
+    temp: "Temp",
+    humidity: "Humidity",
+    voc: "VOC",
+    unassigned: "Unassigned",
+    score: "Score",
+    noCrates: "No crates",
+    refreshError: "Unable to refresh dashboard",
+    loadError: "Unable to load dashboard",
+    language: "Language",
+    english: "English",
+    kannada: "Kannada",
+  },
+  kn: {
+    title: "ಕ್ರೇಟ್ ಕೊಠಡಿಗಳು",
+    updated: "ನವೀಕರಿಸಲಾಗಿದೆ",
+    warehouse: "ಗೋದಾಮು",
+    farm: "ಫಾರ್ಮ್",
+    temp: "ತಾಪಮಾನ",
+    humidity: "ಆರ್ದ್ರತೆ",
+    voc: "VOC",
+    unassigned: "ನಿಗದಿಪಡಿಸಿಲ್ಲ",
+    score: "ಸ್ಕೋರ್",
+    noCrates: "ಕ್ರೇಟ್‌ಗಳಿಲ್ಲ",
+    refreshError: "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್ ನವೀಕರಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ",
+    loadError: "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್ ಲೋಡ್ ಮಾಡಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ",
+    language: "ಭಾಷೆ",
+    english: "English",
+    kannada: "ಕನ್ನಡ",
+  },
+};
+
 function formatValue(value, suffix = "") {
   if (value === null || value === undefined) {
     return "--";
@@ -26,14 +63,14 @@ function priorityClass(priority) {
     return "priority-immediate";
   }
 
-  if (normalized.includes("soon") || normalized.includes("orange")) {
+  if (normalized.includes("soon") || normalized.includes("today") || normalized.includes("orange")) {
     return "priority-soon";
   }
 
   return "priority-unknown";
 }
 
-function CrateBox({ scan }) {
+function CrateBox({ scan, labels }) {
   const priority = scan.qrCode?.priority || scan.priority;
   const shelfScore = scan.qrCode?.ShelfScore ?? scan.ShelfScore;
   const crateClassName = `crate-box ${priorityClass(priority)}`;
@@ -42,20 +79,20 @@ function CrateBox({ scan }) {
     <article className={crateClassName}>
       <div>
         <strong>{scan.qrCodeId}</strong>
-        <p>{scan.room?.name || scan.roomId || "Unassigned"}</p>
+        <p>{scan.room?.name || scan.roomId || labels.unassigned}</p>
       </div>
 
       <dl>
         <div>
-          <dt>Temp</dt>
+          <dt>{labels.temp}</dt>
           <dd>{formatValue(scan.temperature, " C")}</dd>
         </div>
         <div>
-          <dt>Humidity</dt>
+          <dt>{labels.humidity}</dt>
           <dd>{formatValue(scan.humidity, "%")}</dd>
         </div>
         <div>
-          <dt>VOC</dt>
+          <dt>{labels.voc}</dt>
           <dd>{formatValue(scan.voc)}</dd>
         </div>
       </dl>
@@ -63,14 +100,14 @@ function CrateBox({ scan }) {
       {(priority || shelfScore !== null) && (
         <div className="crate-meta">
           {priority && <span className="priority-pill">{priority}</span>}
-          {shelfScore !== null && shelfScore !== undefined && <span>Score {shelfScore}</span>}
+          {shelfScore !== null && shelfScore !== undefined && <span>{labels.score} {shelfScore}</span>}
         </div>
       )}
     </article>
   );
 }
 
-function CrateColumn({ title, count, scans }) {
+function CrateColumn({ title, count, scans, labels }) {
   return (
     <section className="crate-column">
       <div className="column-heading">
@@ -80,9 +117,9 @@ function CrateColumn({ title, count, scans }) {
 
       <div className="crate-list">
         {scans.length > 0 ? (
-          scans.map((scan) => <CrateBox key={scan.id} scan={scan} />)
+          scans.map((scan) => <CrateBox key={scan.id} scan={scan} labels={labels} />)
         ) : (
-          <p className="empty-state">No crates</p>
+          <p className="empty-state">{labels.noCrates}</p>
         )}
       </div>
     </section>
@@ -92,6 +129,8 @@ function CrateColumn({ title, count, scans }) {
 export default function DashboardPage() {
   const [dashboard, setDashboard] = useState(null);
   const [error, setError] = useState("");
+  const [language, setLanguage] = useState("en");
+  const labels = LABELS[language];
 
   const fetchDashboard = useCallback(async () => {
     try {
@@ -108,7 +147,7 @@ export default function DashboardPage() {
       setError("");
     } catch (err) {
       console.error(err);
-      setError("Unable to refresh dashboard");
+      setError("refresh");
     }
   }, []);
 
@@ -128,32 +167,44 @@ export default function DashboardPage() {
     <main className="dashboard-page">
       <header className="dashboard-topbar">
         <div>
-          <h1>Crate Rooms</h1>
-          <p>Updated {dashboard?.updated_at ? new Date(dashboard.updated_at).toLocaleTimeString() : "--"}</p>
+          <h1>{labels.title}</h1>
+          <p>{labels.updated} {dashboard?.updated_at ? new Date(dashboard.updated_at).toLocaleTimeString() : "--"}</p>
         </div>
 
-        <aside className="sensor-panel">
-          <span>Warehouse</span>
-          <div>
-            <strong>{formatValue(warehouseSensor?.temperature, " C")}</strong>
-            <strong>{formatValue(warehouseSensor?.humidity, "%")}</strong>
-            <strong>{formatValue(warehouseSensor?.voc)}</strong>
-          </div>
-        </aside>
+        <div className="dashboard-actions">
+          <label className="language-control">
+            <span>{labels.language}</span>
+            <select value={language} onChange={(event) => setLanguage(event.target.value)}>
+              <option value="en">{labels.english}</option>
+              <option value="kn">{labels.kannada}</option>
+            </select>
+          </label>
+
+          <aside className="sensor-panel">
+            <span>{labels.warehouse}</span>
+            <div>
+              <strong>{formatValue(warehouseSensor?.temperature, " C")}</strong>
+              <strong>{formatValue(warehouseSensor?.humidity, "%")}</strong>
+              <strong>{formatValue(warehouseSensor?.voc)}</strong>
+            </div>
+          </aside>
+        </div>
       </header>
 
-      {error && <p className="dashboard-error">{error}</p>}
+      {error && <p className="dashboard-error">{labels.refreshError}</p>}
 
       <div className="crate-grid">
         <CrateColumn
-          title="Farm"
+          title={labels.farm}
           count={dashboard?.counts?.farm || 0}
           scans={dashboard?.data?.farm || []}
+          labels={labels}
         />
         <CrateColumn
-          title="Warehouse"
+          title={labels.warehouse}
           count={dashboard?.counts?.warehouse || 0}
           scans={dashboard?.data?.warehouse || []}
+          labels={labels}
         />
       </div>
     </main>

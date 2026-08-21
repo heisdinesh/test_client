@@ -138,7 +138,7 @@ export default function ScanPage() {
           setCanScanAgain(false);
 
           const scannedAt = new Date().toISOString();
-          const roomId = scanPlace === "warehouse" ? "ROOM-02" : "ROOM-01";
+          const roomId = scanPlace === "warehouse" ? "ROOM-01" : "ROOM-02";
 
           if (!navigator.geolocation) {
             setError("Location is not supported by this browser.");
