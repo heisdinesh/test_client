@@ -4,6 +4,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Html5Qrcode } from "html5-qrcode";
 import "./scan.css";
 
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  "https://5000-kode-ws-f9fbf17f0.hebbale.academy";
+
 export default function ScanPage() {
   const scannerRef = useRef(null);
 
@@ -12,6 +16,31 @@ export default function ScanPage() {
   const [location, setLocation] = useState(null);
   const [weather, setWeather] = useState(null);
   const [error, setError] = useState("");
+  const [saveStatus, setSaveStatus] = useState("");
+  const [canScanAgain, setCanScanAgain] = useState(false);
+
+  const playScanBeep = () => {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+
+    if (!AudioContext) {
+      return;
+    }
+
+    const audioContext = new AudioContext();
+    const oscillator = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(880, audioContext.currentTime);
+    gain.gain.setValueAtTime(0.18, audioContext.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.18);
+
+    oscillator.connect(gain);
+    gain.connect(audioContext.destination);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 0.18);
+    oscillator.onended = () => audioContext.close();
+  };
 
   const fetchWeather = async (lat, lon) => {
     const response = await fetch(
@@ -40,6 +69,34 @@ export default function ScanPage() {
     };
   };
 
+  const saveScan = async (scanData) => {
+    setSaveStatus("Saving scan...");
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/qr-scans`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(scanData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.ok) {
+        throw new Error(data.error || data.message || "Unable to save scan");
+      }
+
+      setSaveStatus("Scan saved");
+      return data;
+    } catch (err) {
+      console.error(err);
+      setSaveStatus("Scan save failed");
+      setError("Scan saved locally, but could not reach backend.");
+      return null;
+    }
+  };
+
   const startScanner = useCallback(() => {
     const scanner = scannerRef.current;
     scanner
@@ -59,11 +116,24 @@ export default function ScanPage() {
             console.log(err);
           }
 
+          playScanBeep();
           setResult(decodedText);
           setError("");
+          setCanScanAgain(false);
+
+          const scannedAt = new Date().toISOString();
+          const roomId = scanPlace === "warehouse" ? "ROOM-02" : "ROOM-01";
 
           if (!navigator.geolocation) {
             setError("Location is not supported by this browser.");
+            await saveScan({
+              qrData: decodedText,
+              scanPlace,
+              room_id: roomId,
+              room_type: scanPlace,
+              scanned_at: scannedAt,
+            });
+            setCanScanAgain(true);
             return;
           }
 
@@ -77,12 +147,10 @@ export default function ScanPage() {
                 longitude,
               });
 
-              try {
-                const weatherData = await fetchWeather(
-                  latitude,
-                  longitude
-                );
+              let weatherData = null;
 
+              try {
+                weatherData = await fetchWeather(latitude, longitude);
                 setWeather(weatherData);
               } catch (err) {
                 setError("Unable to fetch weather.");
@@ -91,15 +159,29 @@ export default function ScanPage() {
               const scanData = {
                 qrData: decodedText,
                 scanPlace,
+                room_id: roomId,
+                room_type: scanPlace,
                 latitude,
                 longitude,
-                timestamp: new Date().toISOString(),
+                temperature: weatherData?.temperature,
+                humidity: weatherData?.humidity,
+                precipitation: weatherData?.precipitation,
+                scanned_at: scannedAt,
               };
 
-              console.log(scanData);
+              await saveScan(scanData);
+              setCanScanAgain(true);
             },
-            () => {
+            async () => {
               setError("Please allow location access.");
+              await saveScan({
+                qrData: decodedText,
+                scanPlace,
+                room_id: roomId,
+                room_type: scanPlace,
+                scanned_at: scannedAt,
+              });
+              setCanScanAgain(true);
             },
             {
               enableHighAccuracy: true,
@@ -120,6 +202,8 @@ export default function ScanPage() {
     setLocation(null);
     setWeather(null);
     setError("");
+    setSaveStatus("");
+    setCanScanAgain(false);
 
     setTimeout(() => {
       startScanner();
@@ -169,6 +253,10 @@ export default function ScanPage() {
           <div className="result">
             <strong>QR Scanned</strong>
             <p>{result}</p>
+
+            {saveStatus && (
+              <p className="save-status">{saveStatus}</p>
+            )}
 
             {location && (
               <div>
@@ -234,13 +322,15 @@ export default function ScanPage() {
               <p className="error">{error}</p>
             )}
 
-            <button
-              className="scan-again-button"
-              type="button"
-              onClick={handleScanAgain}
-            >
-              Scan again
-            </button>
+            {canScanAgain && (
+              <button
+                className="scan-again-button"
+                type="button"
+                onClick={handleScanAgain}
+              >
+                Scan again
+              </button>
+            )}
           </div>
         )}
       </div>
