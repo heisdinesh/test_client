@@ -19,6 +19,22 @@ export default function ScanPage() {
   const [saveStatus, setSaveStatus] = useState("");
   const [canScanAgain, setCanScanAgain] = useState(false);
 
+  const speakKannadaPrompt = () => {
+    if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) {
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(
+      "ದಯವಿಟ್ಟು ಕ್ರೇಟ್‌ನ QR ಕೋಡ್ ಸ್ಕ್ಯಾನ್ ಮಾಡಿ"
+    );
+    utterance.lang = "kn-IN";
+    utterance.rate = 0.9;
+
+    window.speechSynthesis.speak(utterance);
+  };
+
   const playScanBeep = () => {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
 
@@ -214,6 +230,7 @@ export default function ScanPage() {
     const scanner = new Html5Qrcode("qr-reader");
 
     scannerRef.current = scanner;
+    speakKannadaPrompt();
     startScanner();
 
     return () => {
