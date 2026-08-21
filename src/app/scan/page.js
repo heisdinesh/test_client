@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Html5Qrcode } from "html5-qrcode";
 import "./scan.css";
 
 export default function ScanPage() {
   const scannerRef = useRef(null);
 
+  const [scanPlace, setScanPlace] = useState("farm");
   const [result, setResult] = useState("");
   const [location, setLocation] = useState(null);
   const [weather, setWeather] = useState(null);
@@ -39,11 +40,8 @@ export default function ScanPage() {
     };
   };
 
-  useEffect(() => {
-    const scanner = new Html5Qrcode("qr-reader");
-
-    scannerRef.current = scanner;
-
+  const startScanner = useCallback(() => {
+    const scanner = scannerRef.current;
     scanner
       .start(
         { facingMode: "environment" },
@@ -92,6 +90,7 @@ export default function ScanPage() {
 
               const scanData = {
                 qrData: decodedText,
+                scanPlace,
                 latitude,
                 longitude,
                 timestamp: new Date().toISOString(),
@@ -114,18 +113,50 @@ export default function ScanPage() {
       .catch(() => {
         setError("Unable to access camera.");
       });
+  }, [scanPlace]);
+
+  const handleScanAgain = () => {
+    setResult("");
+    setLocation(null);
+    setWeather(null);
+    setError("");
+
+    setTimeout(() => {
+      startScanner();
+    }, 0);
+  };
+
+  useEffect(() => {
+    const scanner = new Html5Qrcode("qr-reader");
+
+    scannerRef.current = scanner;
+    startScanner();
 
     return () => {
       if (scanner.isScanning) {
         scanner.stop().catch(() => {});
       }
     };
-  }, []);
+  }, [scanPlace, startScanner]);
 
   return (
     <main className="scan-page">
       <div className="scan-card">
-        <h1>Scan QR Code</h1>
+        <div className="scan-header">
+          <h1>Scan QR Code</h1>
+
+          <label className="scan-place">
+            <span>Type</span>
+            <select
+              value={scanPlace}
+              onChange={(event) => setScanPlace(event.target.value)}
+              disabled={Boolean(result)}
+            >
+              <option value="farm">Farm</option>
+              <option value="warehouse">Warehouse</option>
+            </select>
+          </label>
+        </div>
 
         {!result && (
           <>
@@ -202,6 +233,14 @@ export default function ScanPage() {
             {error && (
               <p className="error">{error}</p>
             )}
+
+            <button
+              className="scan-again-button"
+              type="button"
+              onClick={handleScanAgain}
+            >
+              Scan again
+            </button>
           </div>
         )}
       </div>
